@@ -7,6 +7,7 @@
 
 import UIKit
 import Alamofire
+import SDWebImage
 
 class ViewController: UIViewController, UITextFieldDelegate {
     
@@ -16,7 +17,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet var countryName: [UIButton]!
     @IBOutlet weak var stackView: UIStackView!
     
-    @IBOutlet weak var stackViewLbl: UIStackView!
     // Current Data Outlet
     @IBOutlet weak var observationTimeLbl: UILabel!
     @IBOutlet weak var temperatureLbl: UILabel!
@@ -34,8 +34,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var uvIndexLbl: UILabel!
     @IBOutlet weak var visibilityLbl: UILabel!
     
-    var selectedCountry: String?
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -50,7 +48,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
         stackView.layer.masksToBounds = false
         
         countryTextField.delegate = self
-        
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -70,48 +67,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
                 if let data = data {
                     do {
                         let weatherResponse = try JSONDecoder().decode(WeatherResponse.self, from: data)
-                        
-                        print("Observation Time: \(weatherResponse.current.observationTime)")
-                        print("Temperature: \(weatherResponse.current.temperature)°C")
-                        print("Weather Code: \(weatherResponse.current.weatherCode)")
-                        print("Weather Icons: \(weatherResponse.current.weatherIcons.joined(separator: ", "))")
-                        print("Weather Descriptions: \(weatherResponse.current.weatherDescriptions.joined(separator: ", "))")
-                        print("Wind Speed: \(weatherResponse.current.windSpeed) km/h")
-                        print("Wind Degree: \(weatherResponse.current.windDegree)°")
-                        print("Wind Direction: \(weatherResponse.current.windDir)")
-                        print("Pressure: \(weatherResponse.current.pressure) hPa")
-                        print("Precipitation: \(weatherResponse.current.precip) mm")
-                        print("Humidity: \(weatherResponse.current.humidity)%")
-                        print("Cloud Cover: \(weatherResponse.current.cloudcover)%")
-                        print("Feels Like: \(weatherResponse.current.feelslike)°C")
-                        print("UV Index: \(weatherResponse.current.uvIndex)")
-                        print("Visibility: \(weatherResponse.current.visibility) km")
                         print("Is Day: \(weatherResponse.current.isDay)")
-                        
-                        self.observationTimeLbl.text = "Observation Time: \(weatherResponse.current.observationTime)"
-                        self.temperatureLbl.text = "Temperature: \(weatherResponse.current.temperature)°C"
-                        self.weatherCodeLbl.text = "Weather Code: \(weatherResponse.current.weatherCode)"
-                        self.weatherDescriptionLbl.text = "Weather Descriptions: \(weatherResponse.current.weatherDescriptions.joined(separator: ", "))"
-                        self.windSpeedLbl.text = "Wind Speed: \(weatherResponse.current.windSpeed) km/h"
-                        self.windDegreeLbl.text = "Wind Degree: \(weatherResponse.current.windDegree)°"
-                        self.windDirLbl.text = "Wind Direction: \(weatherResponse.current.windDir)"
-                        self.pressureLbl.text = "Pressure: \(weatherResponse.current.pressure) hPa"
-                        self.precipLbl.text = "Precipitation: \(weatherResponse.current.precip) mm"
-                        self.humidityLbl.text = "Humidity: \(weatherResponse.current.humidity)%"
-                        self.cloudcoverLbl.text = "Cloud Cover: \(weatherResponse.current.cloudcover)%"
-                        self.feelslikeLbl.text = "Feels Like: \(weatherResponse.current.feelslike)°C"
-                        self.uvIndexLbl.text = "UV Index: \(weatherResponse.current.uvIndex)"
-                        self.visibilityLbl.text = "Visibility: \(weatherResponse.current.visibility) km"
-                        
-                        if weatherResponse.current.isDay == "yes" {
-                            self.view.backgroundColor = UIColor(patternImage: UIImage(named: "dayBackground")!)
-                        } else {
-                            self.view.backgroundColor = UIColor(patternImage: UIImage(named: "nightBackground")!)
-                        }
-                        
-                        if let iconURLString = weatherResponse.current.weatherIcons.first, let iconURL = URL(string: iconURLString) {
-                            self.downloadWeatherIcon(from: iconURL)
-                        }
+                        self.updateUI(with: weatherResponse)
                     } catch {
                         print("Error decoding JSON: \(error)")
                     }
@@ -122,16 +79,31 @@ class ViewController: UIViewController, UITextFieldDelegate {
         }
     }
     
-    func downloadWeatherIcon(from url: URL) {
-        URLSession.shared.dataTask(with: url) { data, _, error in
-            guard let data = data, error == nil else {
-                print("Failed to download weather icon:", error?.localizedDescription ?? "")
-                return
-            }
-            DispatchQueue.main.async {
-                self.weatherIconImage.image = UIImage(data: data)
-            }
-        }.resume()
+    func updateUI(with weatherResponse: WeatherResponse) {
+        self.observationTimeLbl.text = "Observation Time: \(weatherResponse.current.observationTime)"
+        self.temperatureLbl.text = "Temperature: \(weatherResponse.current.temperature)°C"
+        self.weatherCodeLbl.text = "Weather Code: \(weatherResponse.current.weatherCode)"
+        self.weatherDescriptionLbl.text = "Weather Descriptions: \(weatherResponse.current.weatherDescriptions.joined(separator: ", "))"
+        self.windSpeedLbl.text = "Wind Speed: \(weatherResponse.current.windSpeed) km/h"
+        self.windDegreeLbl.text = "Wind Degree: \(weatherResponse.current.windDegree)°"
+        self.windDirLbl.text = "Wind Direction: \(weatherResponse.current.windDir)"
+        self.pressureLbl.text = "Pressure: \(weatherResponse.current.pressure) hPa"
+        self.precipLbl.text = "Precipitation: \(weatherResponse.current.precip) mm"
+        self.humidityLbl.text = "Humidity: \(weatherResponse.current.humidity)%"
+        self.cloudcoverLbl.text = "Cloud Cover: \(weatherResponse.current.cloudcover)%"
+        self.feelslikeLbl.text = "Feels Like: \(weatherResponse.current.feelslike)°C"
+        self.uvIndexLbl.text = "UV Index: \(weatherResponse.current.uvIndex)"
+        self.visibilityLbl.text = "Visibility: \(weatherResponse.current.visibility) km"
+        
+        if weatherResponse.current.isDay == "yes" {
+            self.view.backgroundColor = UIColor(patternImage: UIImage(named: "dayBackground")!)
+        } else {
+            self.view.backgroundColor = UIColor(patternImage: UIImage(named: "nightBackground")!)
+        }
+        
+        if let iconURLString = weatherResponse.current.weatherIcons.first, let iconURL = URL(string: iconURLString) {
+            self.weatherIconImage.sd_setImage(with: iconURL, completed: nil)
+        }
     }
     
     @IBAction func countryNameDropDown(_ sender: UIButton) {
@@ -171,12 +143,10 @@ class ViewController: UIViewController, UITextFieldDelegate {
     @IBAction func btnWeatherGetTapped(_ sender: UIButton) {
         
         guard let city = countryTextField.text, !city.isEmpty else {
-            showAlert(message: "Please enter a city.")
+            showAlert(message: "Please select a country.")
             return
         }
-        
         fetchWeatherData(forCity: city)
-        
     }
     
     func showAlert(message: String) {
@@ -184,6 +154,4 @@ class ViewController: UIViewController, UITextFieldDelegate {
         alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
         present(alert, animated: true, completion: nil)
     }
-    
-    
 }

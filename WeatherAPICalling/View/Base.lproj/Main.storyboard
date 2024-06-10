@@ -321,7 +321,6 @@
                         <outlet property="precipLbl" destination="NEE-SC-gLK" id="h7G-v5-AFe"/>
                         <outlet property="pressureLbl" destination="mYb-Sb-b9U" id="bF2-hp-hEl"/>
                         <outlet property="stackView" destination="Nkv-ug-ICN" id="dAQ-aV-uwq"/>
-                        <outlet property="stackViewLbl" destination="pky-by-8KI" id="kFH-ND-Idg"/>
                         <outlet property="temperatureLbl" destination="ica-cd-055" id="1tW-oO-oAF"/>
                         <outlet property="uvIndexLbl" destination="qsk-ff-XUI" id="eOo-ZB-3Qd"/>
                         <outlet property="visibilityLbl" destination="WPY-te-kDA" id="4pt-vg-o6i"/>
